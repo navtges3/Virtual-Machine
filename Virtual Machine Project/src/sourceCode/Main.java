@@ -5,8 +5,7 @@ public class Main {
 	public static int test_passed = 0;
 
 	public static void main(String[] args) {		
-		//J0e result = desugar(test);
-		//System.out.println("Desugar pp test 1 of " + result.pp() + " = " + result.interp());
+		
 	}
 
 	public static J0e desugar(Sexpr se) {
@@ -14,6 +13,11 @@ public class Main {
 		return null;
 	}
 
+	/*********************
+	 *                   *
+	 * Testing functions *
+	 *                   *
+	 *********************/
 	public static void test(Sexpr se, int expected) {
 		J0e expr = desugar(se);
 
