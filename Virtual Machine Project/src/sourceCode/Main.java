@@ -5,12 +5,56 @@ public class Main {
 	public static int test_passed = 0;
 
 	public static void main(String[] args) {		
-		
+
 	}
 
 	public static J0e desugar(Sexpr se) {
 
-		return null;
+		//number
+		if(se instanceof SE_Num)
+			return JN(((SE_Num)se).num);
+		//negation
+		if(se instanceof SE_Cons && 
+				((SE_Cons)se).lhs instanceof SE_String &&
+				((SE_Cons)se).lhs.equals("-") &&
+				((SE_Cons)((SE_Cons)se).rhs).rhs instanceof SE_Empty)
+			return JM(JN(-1), desugar(((SE_Cons)((SE_Cons)se).rhs).lhs));
+		//plus sign
+		if(se instanceof SE_Cons && 
+				((SE_Cons)se).lhs instanceof SE_String &&
+				((SE_Cons)se).lhs.equals("+") &&
+				(((SE_Cons)se).rhs) instanceof SE_Empty)
+			return JN(0);
+		//Asterisk
+		if(se instanceof SE_Cons && 
+				((SE_Cons)se).lhs instanceof SE_String &&
+				((SE_Cons)se).lhs.equals("*") &&
+				(((SE_Cons)se).rhs) instanceof SE_Empty)
+			return JN(1);
+		//subtraction
+		if(se instanceof SE_Cons && 
+				((SE_Cons)se).lhs instanceof SE_String &&
+				((SE_Cons)se).lhs.equals("-") &&
+				(((SE_Cons)se).rhs) instanceof SE_Cons)
+			return JA(desugar(((SE_Cons)((SE_Cons)se).rhs).lhs), 
+					desugar(new SE_Cons(new SE_String("-"), ((SE_Cons)((SE_Cons)se).rhs).rhs)));
+		//Multiplication
+		if(se instanceof SE_Cons && 
+				((SE_Cons)se).lhs instanceof SE_String &&
+				((SE_Cons)se).lhs.equals("*") &&
+				(((SE_Cons)se).rhs) instanceof SE_Cons)
+			return JM(desugar(((SE_Cons)((SE_Cons)se).rhs).lhs), 
+					desugar(new SE_Cons(new SE_String("*"), ((SE_Cons)((SE_Cons)se).rhs).rhs)));
+		//Addition
+		if(se instanceof SE_Cons && 
+				((SE_Cons)se).lhs instanceof SE_String &&
+				((SE_Cons)se).lhs.equals("+") &&
+				(((SE_Cons)se).rhs) instanceof SE_Cons)
+			return JA(desugar(((SE_Cons)((SE_Cons)se).rhs).lhs), 
+					desugar(new SE_Cons(new SE_String("+"), ((SE_Cons)((SE_Cons)se).rhs).rhs)));
+
+		//Error Code
+		return JN(42069);
 	}
 
 	/*********************
@@ -34,27 +78,27 @@ public class Main {
 	 *                  *
 	 ********************/
 	//create a JNumber
-	public J0e JN(int n) {
+	public static J0e JN(int n) {
 		return new JNumber(n);
 	}
 	//create a JAdd
-	public J0e JA(J0e l, J0e r) {
+	public static J0e JA(J0e l, J0e r) {
 		return new JPlus(l, r);
 	}
 	//create a JMult
-	public J0e JM(J0e l, J0e r) {
+	public static J0e JM(J0e l, J0e r) {
 		return new JMult(l, r);
 	}
 	//create a numeric Sexpr
-	public Sexpr SN(int n) {
+	public static Sexpr SN(int n) {
 		return new SE_Num(n);
 	}
 	//represent add as an Sexpr
-	public Sexpr SA(Sexpr l, Sexpr r) {
+	public static Sexpr SA(Sexpr l, Sexpr r) {
 		return new SE_Cons(new SE_String("+"), new SE_Cons(l, r));
 	}
 	//represent mult as an Sexpr
-	public Sexpr SM(Sexpr l, Sexpr r) {
+	public static Sexpr SM(Sexpr l, Sexpr r) {
 		return new SE_Cons(new SE_String("*"), new SE_Cons(l, r));
 	}
 }
