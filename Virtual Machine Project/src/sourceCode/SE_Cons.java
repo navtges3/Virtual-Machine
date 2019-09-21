@@ -7,4 +7,8 @@ public class SE_Cons implements Sexpr {
 		lhs = l;
 		rhs = r;
 	}
+
+	public String pp() {
+		return "(" + lhs.pp() + " " + rhs.pp() + ")";
+	}
 }

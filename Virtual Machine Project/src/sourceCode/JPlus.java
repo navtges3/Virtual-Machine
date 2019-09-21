@@ -12,7 +12,7 @@ public class JPlus implements J0e {
 
 	//pretty print
 	public String pp() {
-		return "( " + left.pp() + " + " + right.pp() + " )";
+		return "(+ " + left.pp() + " " + right.pp() + ")";
 	}
 
 	//return the addition of the two sides of the expression

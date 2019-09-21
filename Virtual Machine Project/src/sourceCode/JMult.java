@@ -12,7 +12,7 @@ public class JMult implements J0e {
 
 	//pretty print
 	public String pp() {
-		return "( " + left.pp() + " * " + right.pp() + " )";		
+		return "(* " + left.pp() + " " + right.pp() + ")";		
 	}
 
 	//return the value of left times right

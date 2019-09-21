@@ -6,4 +6,8 @@ public class SE_String implements Sexpr{
 	public SE_String(String s) {
 		str = s;
 	}
+
+	public String pp() {
+		return str;
+	}
 }

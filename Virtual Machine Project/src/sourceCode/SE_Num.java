@@ -6,4 +6,8 @@ public class SE_Num implements Sexpr {
 	public SE_Num(int n) {
 		num = n;
 	}
+
+	public String pp() {
+		return Integer.toString(num);
+	}
 }
