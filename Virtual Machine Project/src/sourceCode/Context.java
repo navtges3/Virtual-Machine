@@ -5,7 +5,7 @@ public interface Context {
 }
 
 // C
-class C_Hole implements Context {
+class CHole implements Context {
 	// Returns the value x
 	public Jexpr plug(Jexpr x) {
 		return x;
@@ -13,13 +13,13 @@ class C_Hole implements Context {
 }
 
 // if C e1 e2
-class C_If0 implements Context {
+class CIf0 implements Context {
 	Context hole;
 	Jexpr trueCase;
 	Jexpr falseCase;
 
-	public C_If0(Jexpr lhs, Jexpr rhs) {
-		hole = new C_Hole();
+	public CIf0(Context c, Jexpr lhs, Jexpr rhs) {
+		hole = c;
 		trueCase = lhs;
 		falseCase = rhs;
 	}
@@ -31,13 +31,13 @@ class C_If0 implements Context {
 }
 
 // if e1 C e2
-class C_If1 implements Context {
+class CIf1 implements Context {
 	Jexpr condition;
 	Context hole;
 	Jexpr falseCase;
 
-	public C_If1(Jexpr cond, Jexpr rhs) {
-		hole = new C_Hole();
+	public CIf1(Context c, Jexpr cond, Jexpr rhs) {
+		hole = c;
 		condition = cond;
 		falseCase = rhs;
 	}
@@ -49,14 +49,14 @@ class C_If1 implements Context {
 }
 
 // if e1 e2 C
-class C_If2 implements Context {
+class CIf2 implements Context {
 
 	Jexpr condition;
 	Jexpr trueCase;
 	Context hole;
 
-	public C_If2(Jexpr cond, Jexpr lhs) {
-		hole = new C_Hole();
+	public CIf2(Context c, Jexpr cond, Jexpr lhs) {
+		hole = c;
 		trueCase = lhs;
 		condition = cond;
 	}
@@ -68,12 +68,13 @@ class C_If2 implements Context {
 }
 
 // e1... C e2...
-class C_App implements Context {
+class CApp implements Context {
 	Context hole;
 	Jexpr lhs;
 	Jexpr rhs;
 
-	public C_App(Jexpr l, Jexpr r) {
+	public CApp(Context c, Jexpr l, Jexpr r) {
+		hole = c;
 		lhs = l;
 		rhs = r;
 	}

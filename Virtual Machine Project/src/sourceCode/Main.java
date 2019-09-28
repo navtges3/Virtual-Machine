@@ -1,11 +1,61 @@
 package sourceCode;
 
+import java.util.Stack;
+
 public class Main {
 
 	public static int test_passed = 0;
 
 	public static void main(String[] args) {		
 		runTests();
+	}
+
+	public static Jexpr findRedex(Context c, Jexpr e) {
+
+		if(e.isValue()) {
+			c = new CHole();
+			return e;
+		}
+
+		if(e instanceof JIf) {
+			if(((JIf)e).cond.isValue()) {
+				c = new CHole();
+				return e;
+			}
+			else {
+				Jexpr redex = findRedex(c, ((JIf)e).cond);
+				c = new CIf0(c, ((JIf)e).texpr, ((JIf)e).fexpr);
+				return redex;				
+			}
+		}
+
+		if(e instanceof JApp) {
+			
+			Stack<Jexpr> stack = new Stack<Jexpr>();//keeps track of passed values
+			Jexpr nav = ((JApp)e).args;//used to navigate args
+			Jexpr left = new JNull();//reconstruction of left hand side of the hole
+			
+			while(!nav.isValue()) {
+				if(nav instanceof JCons) {
+					if(!((JCons)nav).lhs.isValue()) {
+
+						while(!stack.empty()) {
+							left = new JCons(stack.pop(), left);
+						}
+
+						Jexpr redex = findRedex(c, ((JCons)nav).lhs);
+						c = new CApp(c, left,((JCons)nav).rhs);
+						return redex;
+					}
+					else {
+						stack.push(((JCons)nav).lhs);
+					}
+				}
+				nav = ((JCons)nav).rhs;
+			}
+		}
+
+		return e;
 	}
 
 	public static Jexpr desugar(Sexpr se) {
@@ -64,15 +114,15 @@ public class Main {
 							new JCons(desugar(((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).lhs), new JNull())));
 		//if
 		if ( se instanceof SE_Cons
-		         && ((SE_Cons)se).lhs instanceof SE_String
-		         && ((SE_String)((SE_Cons)se).lhs).str.equals("if")
-		         && ((SE_Cons)se).rhs instanceof SE_Cons
-		         && ((SE_Cons)((SE_Cons)se).rhs).rhs instanceof SE_Cons
-		         && ((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).rhs instanceof SE_Cons
-		         && ((SE_Cons)((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).rhs).rhs instanceof SE_Empty )
-		      return new JIf( desugar(((SE_Cons)((SE_Cons)se).rhs).lhs),
-		                      desugar(((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).lhs),
-		                      desugar(((SE_Cons)((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).rhs).lhs) );
+				&& ((SE_Cons)se).lhs instanceof SE_String
+				&& ((SE_String)((SE_Cons)se).lhs).str.equals("if")
+				&& ((SE_Cons)se).rhs instanceof SE_Cons
+				&& ((SE_Cons)((SE_Cons)se).rhs).rhs instanceof SE_Cons
+				&& ((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).rhs instanceof SE_Cons
+				&& ((SE_Cons)((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).rhs).rhs instanceof SE_Empty )
+			return new JIf( desugar(((SE_Cons)((SE_Cons)se).rhs).lhs),
+					desugar(((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).lhs),
+					desugar(((SE_Cons)((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).rhs).lhs) );
 		//Error Code
 		return JN(42069);
 	}
@@ -126,12 +176,12 @@ public class Main {
 		test_num(new SE_Cons(new SE_String("-"), new SE_Cons(new SE_Num(4), new SE_Cons(new SE_Num(2), new SE_Empty()))), 2);
 
 		test(new SE_Cons(new SE_String("=="), new SE_Cons(new SE_Num(4), new SE_Cons(new SE_Num(2), new SE_Empty()))), new JBool(false));
-	    test(new SE_Cons(new SE_String("=="), new SE_Cons(new SE_Num(4), new SE_Cons(new SE_Num(4), new SE_Empty()))), new JBool(true));
+		test(new SE_Cons(new SE_String("=="), new SE_Cons(new SE_Num(4), new SE_Cons(new SE_Num(4), new SE_Empty()))), new JBool(true));
 
-	    test(SApp("==", new SE_Num(4), new SE_Num(4)), new JBool(true));
-	    test(SIf(SApp("==", new SE_Num(4), new SE_Num(4)), new SE_Num(5), new SE_Num(6)), JN(5));
-	    test(SIf(SApp("==", new SE_Num(4), new SE_Num(2)), new SE_Num(5), new SE_Num(6)), JN(6));
-	    
+		test(SApp("==", new SE_Num(4), new SE_Num(4)), new JBool(true));
+		test(SIf(SApp("==", new SE_Num(4), new SE_Num(4)), new SE_Num(5), new SE_Num(6)), JN(5));
+		test(SIf(SApp("==", new SE_Num(4), new SE_Num(2)), new SE_Num(5), new SE_Num(6)), JN(6));
+
 		System.out.println(test_passed + " tests passed.");
 	}
 

@@ -3,6 +3,7 @@ package sourceCode;
 public interface Jexpr {
 	public Jexpr interp();
 	public String pp();
+	public Boolean isValue();
 }
 
 class JNull implements Jexpr {
