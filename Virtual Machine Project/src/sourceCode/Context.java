@@ -13,12 +13,12 @@ class CHole implements Context {
 }
 
 // if C e1 e2
-class CIf0 implements Context {
+class CIf implements Context {
 	Context hole;
 	Jexpr trueCase;
 	Jexpr falseCase;
 
-	public CIf0(Context c, Jexpr lhs, Jexpr rhs) {
+	public CIf(Context c, Jexpr lhs, Jexpr rhs) {
 		hole = c;
 		trueCase = lhs;
 		falseCase = rhs;
@@ -27,43 +27,6 @@ class CIf0 implements Context {
 	// Replaces the hole with the value x and returns a JIf
 	public Jexpr plug(Jexpr x) {
 		return new JIf(hole.plug(x), trueCase, falseCase);
-	}
-}
-
-// if e1 C e2
-class CIf1 implements Context {
-	Jexpr condition;
-	Context hole;
-	Jexpr falseCase;
-
-	public CIf1(Context c, Jexpr cond, Jexpr rhs) {
-		hole = c;
-		condition = cond;
-		falseCase = rhs;
-	}
-
-	// Replaces the hole with the value x and returns a JIf
-	public Jexpr plug(Jexpr x) {
-		return new JIf(condition, hole.plug(x), falseCase);
-	}
-}
-
-// if e1 e2 C
-class CIf2 implements Context {
-
-	Jexpr condition;
-	Jexpr trueCase;
-	Context hole;
-
-	public CIf2(Context c, Jexpr cond, Jexpr lhs) {
-		hole = c;
-		trueCase = lhs;
-		condition = cond;
-	}
-
-	// Replaces the hole with the value x and returns a JIf
-	public Jexpr plug(Jexpr x) {
-		return new JIf(condition, trueCase, hole.plug(x));
 	}
 }
 

@@ -12,10 +12,16 @@ public class Main {
 
 	// Interpreter
 	public static Jexpr Interp(Jexpr e) {
-		Jexpr nexte = e.step();
+		Jexpr nexte;
+		// "interp"
+		Context c = new CHole();
+		Jexpr e1 = findRedex(c, e);
+		Jexpr e2 = e1.step();
+		nexte = c.plug(e2);
+		
 		if(nexte == e)
 			return e;
-		else
+		else 
 			return Interp(nexte);
 	}
 	
@@ -34,7 +40,7 @@ public class Main {
 			}
 			else {
 				Jexpr redex = findRedex(c, ((JIf)e).cond);
-				c = new CIf0(c, ((JIf)e).texpr, ((JIf)e).fexpr);
+				c = new CIf(c, ((JIf)e).texpr, ((JIf)e).fexpr);
 				return redex;				
 			}
 		}
