@@ -10,6 +10,16 @@ public class Main {
 		runTests();
 	}
 
+	// Interpreter
+	public static Jexpr Interp(Jexpr e) {
+		Jexpr nexte = e.step();
+		if(nexte == e)
+			return e;
+		else
+			return Interp(nexte);
+	}
+	
+	// Used to find a hole and the expression to go in the hole
 	public static Jexpr findRedex(Context c, Jexpr e) {
 
 		if(e.isValue()) {
@@ -58,6 +68,7 @@ public class Main {
 		return e;
 	}
 
+	// Used to convert from S-expressions to J-expressions
 	public static Jexpr desugar(Sexpr se) {
 
 		//number
