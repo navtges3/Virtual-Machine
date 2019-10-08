@@ -25,6 +25,7 @@ public class CC0 {
 	public static state step(state s) {
 		System.out.println("~~~" + s.e.pp());
 
+		// JIf
 		if(s.e instanceof JIf) {
 			if(last instanceof CHole) {
 				last = new CIf(new CHole(), ((JIf)s.e).texpr, ((JIf)s.e).fexpr);
@@ -42,131 +43,116 @@ public class CC0 {
 			}
 		}
 
+		// JIf true
 		if(s.e instanceof JBool && ((JBool)s.e).val == true && last instanceof CIf) {
 			Jexpr nexte = new JNull();
+			Context prev = null;
 			Context temp = s.E;
 			Context next = new CHole();
 
 			nexte = ((CIf)last).trueCase;
 
-			//find the end of the list again
-			if(s.E instanceof CApp) {
-				next = ((CApp)s.E).hole;
+			if(s.E == last)
+				s.E = new CHole();
+			else {
+				if(s.E instanceof CApp)
+					next = ((CApp)s.E).hole;
+				else
+					next = ((CIf)s.E).hole;
+				while(!(next instanceof CHole)) {
+					prev = temp;
+					temp = next;
+					if(temp instanceof CApp)
+						next = ((CApp)temp).hole;
+					else
+						next = ((CIf)temp).hole;
+				}
+				last = prev;
 			}
-			else if(s.E instanceof CIf) {
-				next = ((CIf)s.E).hole;
-			}
-			while(!(next instanceof CHole)) {
-				temp = next;
-				if(temp instanceof CApp)
-					next = ((CApp)temp).hole;
-				else if(temp instanceof CIf)
-					next = ((CIf)temp).hole;
-			}
-			last = temp;
 			return new state(nexte, s.E);
 		}
+		//JIf false
 		if(s.e instanceof JBool && ((JBool)s.e).val == false && last instanceof CIf) {
 			Jexpr nexte = new JNull();
+			Context prev = null;
 			Context temp = s.E;
 			Context next = new CHole();
 
 			nexte = ((CIf)last).falseCase;
 
-			//find the end of the list again
-			if(s.E instanceof CApp) {
-				next = ((CApp)s.E).hole;
+			if(s.E == last)
+				s.E = new CHole();
+			else {
+				if(s.E instanceof CApp)
+					next = ((CApp)s.E).hole;
+				else
+					next = ((CIf)s.E).hole;
+				while(!(next instanceof CHole)) {
+					prev = temp;
+					temp = next;
+					if(temp instanceof CApp)
+						next = ((CApp)temp).hole;
+					else
+						next = ((CIf)temp).hole;
+				}
+				last = prev;
 			}
-			else if(s.E instanceof CIf) {
-				next = ((CIf)s.E).hole;
-			}
-			while(!(next instanceof CHole)) {
-				temp = next;
-				if(temp instanceof CApp)
-					next = ((CApp)temp).hole;
-				else if(temp instanceof CIf)
-					next = ((CIf)temp).hole;
-			}
-			last = temp;
 			return new state(nexte, s.E);
 		}
 
+		//JApp
 		if(s.e instanceof JApp) {
-			System.out.println("New JApp");
 			if(last instanceof CHole) {
-				System.out.println("1");
 				last = new CApp(new CHole(), ((JApp)s.e).fun, new JNull(), ((JCons)((JCons)((JApp)s.e).args).rhs).lhs);
 				return new state(((JCons)((JApp)s.e).args).lhs, last);
 			}
 			else if(last instanceof CIf){
-				System.out.println("2");
 				((CIf)last).hole = new CApp(new CHole(), ((JApp)s.e).fun, new JNull(), ((JCons)((JCons)((JApp)s.e).args).rhs).lhs);
 				last = ((CIf)last).hole;
 				return new state(((JCons)((JApp)s.e).args).lhs, s.E);
 			}
 			else if(last instanceof CApp){
-				System.out.println("3");
 				System.out.println(((JCons)((JCons)((JApp)s.e).args).rhs).lhs.pp());
-				
+
 				((CApp)last).hole = new CApp(new CHole(), ((JApp)s.e).fun, new JNull(), ((JCons)((JCons)((JApp)s.e).args).rhs).lhs);
 				last = ((CApp)last).hole;
-				System.out.println(((JCons)((JApp)s.e).args).lhs.pp());
 				return new state(((JCons)((JApp)s.e).args).lhs, s.E);
 			}
 		}
+		//JApp hole first
 		if(s.e.isValue() && last instanceof CApp && ((CApp)last).lhs instanceof JNull) {
-			System.out.println("Hole first");
 			Jexpr r = ((CApp)last).rhs;
-			System.out.println(r.pp());
-			((CApp)last).hole = new CApp(new CHole(), ((CApp)last).fun, s.e, new JNull());
-			last = ((CApp)last).hole;
+			((CApp)last).lhs = s.e;
+			((CApp)last).rhs = new JNull();
 			return new state(r, s.E);
 		}
+		//JApp hole second
 		if(s.e.isValue() && last instanceof CApp && ((CApp)last).rhs instanceof JNull) {
 			Jexpr nexte = new JNull();
+			Context prev = null;
 			Context temp = s.E;
 			Context next = new CHole();
 
-			System.out.println(s.e.pp());
-			System.out.println(last.plug(s.e).pp());
 			nexte = delta(last.plug(s.e));
-			System.out.println(nexte.pp());
-			try {
-				Thread.sleep(10000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+
+			// fix the stack
+			if(s.E == last)
+				s.E = new CHole();
+			else {
+				if(s.E instanceof CApp)
+					next = ((CApp)s.E).hole;
+				else
+					next = ((CIf)s.E).hole;
+				while(!(next instanceof CHole)) {
+					prev = temp;
+					temp = next;
+					if(temp instanceof CApp)
+						next = ((CApp)temp).hole;
+					else
+						next = ((CIf)temp).hole;
+				}
+				last = prev;
 			}
-			//find the end of the list again
-			if(s.E instanceof CApp) {
-				next = ((CApp)s.E).hole;
-			}
-			else if(s.E instanceof CIf) {
-				next = ((CIf)s.E).hole;
-			}
-			while(!(next instanceof CHole)) {
-				temp = next;
-				if(temp instanceof CApp)
-					next = ((CApp)temp).hole;
-				else if(temp instanceof CIf)
-					next = ((CIf)temp).hole;
-			}
-			temp = new CHole();
-			//find the end of the list again
-			if(s.E instanceof CApp) {
-				next = ((CApp)s.E).hole;
-			}
-			else if(s.E instanceof CIf) {
-				next = ((CIf)s.E).hole;
-			}
-			while(!(next instanceof CHole)) {
-				temp = next;
-				if(temp instanceof CApp)
-					next = ((CApp)temp).hole;
-				else if(temp instanceof CIf)
-					next = ((CIf)temp).hole;
-			}
-			last = temp;
 			return new state(nexte, s.E);
 		}
 
