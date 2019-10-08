@@ -18,13 +18,13 @@ public class Main {
 		Jexpr e1 = findRedex(c, e);
 		Jexpr e2 = e1.step();
 		nexte = c.plug(e2);
-		
+
 		if(nexte == e)
 			return e;
 		else 
 			return Interp(nexte);
 	}
-	
+
 	// Used to find a hole and the expression to go in the hole
 	public static Jexpr findRedex(Context c, Jexpr e) {
 
@@ -46,28 +46,15 @@ public class Main {
 		}
 
 		if(e instanceof JApp) {
-			
-			Stack<Jexpr> stack = new Stack<Jexpr>();//keeps track of passed values
-			Jexpr nav = ((JApp)e).args;//used to navigate args
-			Jexpr left = new JNull();//reconstruction of left hand side of the hole
-			
-			while(!nav.isValue()) {
-				if(nav instanceof JCons) {
-					if(!((JCons)nav).lhs.isValue()) {
-
-						while(!stack.empty()) {
-							left = new JCons(stack.pop(), left);
-						}
-
-						Jexpr redex = findRedex(c, ((JCons)nav).lhs);
-						c = new CApp(c, left,((JCons)nav).rhs);
-						return redex;
-					}
-					else {
-						stack.push(((JCons)nav).lhs);
-					}
-				}
-				nav = ((JCons)nav).rhs;
+			if(((JCons)((JApp)e).args).lhs.isValue() == false) {
+				Jexpr redex = findRedex(c, ((JCons)((JApp)e).args).lhs);
+				c = new CApp(c, ((JApp)e).fun, new JNull(), ((JCons)((JCons)((JApp)e).args).rhs).lhs);
+				return redex;
+			}
+			if(((JCons)((JCons)((JApp)e).args).rhs).lhs.isValue() == false) {
+				Jexpr redex = findRedex(c, ((JCons)((JCons)((JApp)e).args).rhs).lhs);
+				c = new CApp(c, ((JApp)e).fun, ((JCons)((JApp)e).args).lhs, new JNull());
+				return redex;
 			}
 		}
 

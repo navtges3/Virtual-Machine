@@ -33,33 +33,22 @@ class CIf implements Context {
 // e1... C e2...
 class CApp implements Context {
 	Context hole;
+	Jexpr fun;
 	Jexpr lhs;
 	Jexpr rhs;
 
-	public CApp(Context c, Jexpr l, Jexpr r) {
+	public CApp(Context c, Jexpr fun, Jexpr l, Jexpr r) {
 		hole = c;
+		this.fun = fun;
 		lhs = l;
 		rhs = r;
 	}
 
 	// Replaces the hole with the value x and returns the JApp
 	public Jexpr plug(Jexpr x) {
-		JApp app;
-
-		if(lhs instanceof JCons) {
-
-			//traverse down the expression(list of e's) and add a new JCons to the end
-			JCons nav = (JCons)lhs;
-			while(!(nav.rhs instanceof JNull)) {
-				nav = (JCons)nav.rhs;
-			}
-
-			nav.rhs = new JCons(hole.plug(x), rhs);
-			app = new JApp(((JCons)lhs).lhs, ((JCons)lhs).rhs);
-		}
+		if(lhs instanceof JNull)
+			return new JApp(fun, new JCons(x, new JCons(rhs, new JNull())));
 		else
-			app = new JApp(lhs, new JCons(hole.plug(x), rhs));
-
-		return app;
+			return new JApp(fun, new JCons(lhs, new JCons(x, new JNull())));
 	}
 }
