@@ -6,8 +6,11 @@ public class Main {
 
 	public static int test_passed = 0;
 
-	public static void main(String[] args) {		
-		runTests();
+	public static void main(String[] args) {
+		Jexpr e = JA(JM(JN(2), JN(4)), JN(8));
+		System.out.println("CC0: " + CC0.interp(e).pp());
+		System.out.println("Big: " + e.interp().pp());
+		//runTests();
 	}
 
 	// Interpreter

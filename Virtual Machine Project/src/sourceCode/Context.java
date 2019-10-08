@@ -14,9 +14,9 @@ class CHole implements Context {
 
 // if C e1 e2
 class CIf implements Context {
-	Context hole;
-	Jexpr trueCase;
-	Jexpr falseCase;
+	public Context hole;
+	public Jexpr trueCase;
+	public Jexpr falseCase;
 
 	public CIf(Context c, Jexpr lhs, Jexpr rhs) {
 		hole = c;
@@ -32,10 +32,10 @@ class CIf implements Context {
 
 // e1... C e2...
 class CApp implements Context {
-	Context hole;
-	Jexpr fun;
-	Jexpr lhs;
-	Jexpr rhs;
+	public Context hole;
+	public Jexpr fun;
+	public Jexpr lhs;
+	public Jexpr rhs;
 
 	public CApp(Context c, Jexpr fun, Jexpr l, Jexpr r) {
 		hole = c;
