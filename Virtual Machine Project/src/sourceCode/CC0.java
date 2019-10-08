@@ -23,8 +23,6 @@ public class CC0 {
 	}
 
 	public static state step(state s) {
-		System.out.println("~~~" + s.e.pp());
-
 		// JIf
 		if(s.e instanceof JIf) {
 			if(last instanceof CHole) {
@@ -120,8 +118,6 @@ public class CC0 {
 				return new state(((JCons)((JApp)s.e).args).lhs, s.E);
 			}
 			else if(last instanceof CApp){
-				System.out.println(((JCons)((JCons)((JApp)s.e).args).rhs).lhs.pp());
-
 				((CApp)last).hole = new CApp(new CHole(), ((JApp)s.e).fun, new JNull(), ((JCons)((JCons)((JApp)s.e).args).rhs).lhs);
 				last = ((CApp)last).hole;
 				return new state(((JCons)((JApp)s.e).args).lhs, s.E);
@@ -172,7 +168,6 @@ public class CC0 {
 	}
 
 	private static Jexpr delta(Jexpr e) {
-		System.out.println("Delta: " + e.pp());
 		Jexpr fun = ((JApp)e).fun;
 		Jexpr args = ((JApp)e).args;
 
