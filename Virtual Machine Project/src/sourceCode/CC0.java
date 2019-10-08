@@ -68,6 +68,10 @@ public class CC0 {
 						next = ((CIf)temp).hole;
 				}
 				last = prev;
+				if(last instanceof CApp)
+					((CApp)last).hole = new CHole();
+				else
+					((CIf)last).hole = new CHole();
 			}
 			return new state(nexte, s.E);
 		}
@@ -96,6 +100,10 @@ public class CC0 {
 						next = ((CIf)temp).hole;
 				}
 				last = prev;
+				if(last instanceof CApp)
+					((CApp)last).hole = new CHole();
+				else
+					((CIf)last).hole = new CHole();
 			}
 			return new state(nexte, s.E);
 		}
@@ -152,6 +160,10 @@ public class CC0 {
 						next = ((CIf)temp).hole;
 				}
 				last = prev;
+				if(last instanceof CApp)
+					((CApp)last).hole = new CHole();
+				else
+					((CIf)last).hole = new CHole();
 			}
 			return new state(nexte, s.E);
 		}
