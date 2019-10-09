@@ -23,6 +23,7 @@ public class CC0 {
 	}
 
 	public static state step(state s) {
+		System.out.println(s.e.pp());
 		// JIf
 		if(s.e instanceof JIf) {
 			if(last instanceof CHole) {
