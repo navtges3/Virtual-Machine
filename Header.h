@@ -1,8 +1,9 @@
 #pragma once
+#include <string.h>
 
 enum tag { IF, NUM, APP, BOOL, PRIM, KRET, KIF, KAPP, CHECKED, UNCHECKED };
 
-typedef struct{ enum tag t}expr;
+typedef struct { enum tag t; }expr;
 
 typedef struct {
 	expr	h;
@@ -25,7 +26,7 @@ typedef struct {
 
 typedef struct {
 	expr	h;
-	int		val
+	int		val;
 }JBool;
 
 typedef struct {
@@ -54,10 +55,12 @@ typedef struct {
 
 typedef struct {
 	expr	h;
-	expr*	list;
+	expr*	data;
+	expr*	next;
 }KChecked;
 
 typedef struct {
 	expr	h;
-	expr*	list;
+	expr*	data;
+	expr*	next;
 }KUnchecked;
