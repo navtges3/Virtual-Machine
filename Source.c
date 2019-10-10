@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "Header.h"
 
+JDef** map = NULL;
+
 expr* make_if(expr* c, expr* t, expr* f) {
 	printf("__make JIF\n");
 	JIf* o = malloc(sizeof(JIf));
@@ -91,11 +93,12 @@ expr* make_unchecked(expr* data, expr* next) {
 	return o;
 }
 
-expr* make_fun(char* Name) {
+expr* make_fun(char* Name, expr* params) {
 	printf("__make fun\n");
-	fun* o = malloc(sizeof(fun));
+	Fun* o = malloc(sizeof(Fun));
 	o->h.t = FUN;
 	o->Name = Name;
+	o->params = params;
 	return o;
 }
 
@@ -107,14 +110,42 @@ expr* make_var(char* name) {
 	return o;
 }
 
-expr* make_jdef(expr* fun, expr* params, expr* e) {
+expr* make_jdef(expr* fun, expr* e) {
 	printf("__make jdef\n");
+	if (inMap(fun)) {
+		return NULL;
+	}
 	JDef* o = malloc(sizeof(JDef));
 	o->h.t = JDEF;
 	o->fun = fun;
-	o->params = params;
 	o->e = e;
+	pushToMap(o);
 	return o;
+}
+
+int inMap(expr* f) {
+	Fun* fun = (Fun*)f;
+	int i;
+	if (map == NULL)
+		map = malloc(sizeof(JDef*));
+	else {
+		for (i = 0; i < (sizeof(map) / sizeof(JDef*)); ++i) {
+			if (strcmp(((Fun*)map[i]->fun)->Name, fun->Name))
+				return i;
+		}
+	}
+	return 0;
+}
+
+void pushToMap(expr* def) {
+	int i;
+	JDef** temp = malloc(sizeof(map) + sizeof(JDef*));
+	for (i = 0; i < (sizeof(map) / sizeof(JDef*)); ++i) {
+		temp[i] = map[i];
+	}
+	temp[i] = def;
+	free(map);
+	map = temp;
 }
 
 //enum tag { IF, NUM, APP, BOOL, PRIM, KRET, KIF, KAPP, CHECKED, UNCHECKED };
@@ -131,6 +162,36 @@ int boolVal(expr* e) {
 	case PRIM:
 	default:
 		return 0;
+	}
+}
+
+expr* subst(expr* e, expr* x, expr* v) {
+	switch (e->t) {
+	// stuff happens
+	case IF: {
+		JIf* temp = (JIf*)e;
+		return make_if(subst(temp->c, x, v), subst(temp->t, x, v), subst(temp->f, x, v));
+		break;
+	}
+	case APP: {
+		JApp* temp = (JApp*)e;
+		return make_app(subst(temp->fun, x, v), subst(temp->arg1, x, v), subst(temp->arg2, x, v));
+		break;
+	}
+	case VAR: {
+		if (e == x)
+			return v;
+		else
+			return e;
+		break;
+	}
+
+	// values
+	case NUM:
+	case BOOL:
+	case PRIM:
+	case FUN:
+		return e;
 	}
 }
 
@@ -179,9 +240,27 @@ void eval(expr** e) {
 			ok = make_kapp(NULL, NULL, make_unchecked(temp->arg1, make_unchecked(temp->arg2, NULL)), ok);
 			break;
 		}
+		case FUN: {
+			printf("@: FUN\n");
+			Fun* temp = (Fun*)(*e);
+			int index = inMap(temp);
+			if (index) {
+				expr* defexpr = map[index]->e;
+				expr* pnode = ((Fun*)map[index]->fun)->params;
+				expr* cnode = temp->params;
+
+				while (pnode != NULL && cnode != NULL) {
+					defexpr = subst(defexpr, ((KChecked*)pnode)->data, ((KChecked*)cnode)->data);
+					pnode = ((KChecked*)pnode)->next;
+					cnode = ((KChecked*)cnode)->next;
+				}
+				*e = defexpr;
+			}
+			break;
+		}
+
 		case NUM:
 		case BOOL:
-		case FUN:
 		case PRIM: {
 			printf("@: VALUE\n");
 			switch (ok->t) {
@@ -216,7 +295,7 @@ void eval(expr** e) {
 					printf("\tRemoving one from unchecked\n");
 					KUnchecked* uc = tempK->unchecked;
 					(*e) = uc->data;
-`					uc = uc->next;
+					uc = uc->next;
 					tempK->unchecked = uc;
 					ok = tempK;
 					break;
