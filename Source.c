@@ -2,7 +2,7 @@
 #include "Header.h"
 
 expr* make_if(expr* c, expr* t, expr* f) {
-	printf("make JIF\n");
+	printf("__make JIF\n");
 	JIf* o = malloc(sizeof(JIf));
 	o->h.t = IF;
 	o->c = c;
@@ -12,7 +12,7 @@ expr* make_if(expr* c, expr* t, expr* f) {
 }
 
 expr* make_num(int n) {
-	printf("make JNum %d\n", n);
+	printf("__make JNum %d\n", n);
 	JNum* o = malloc(sizeof(JNum));
 	o->h.t = NUM;
 	o->n = n;
@@ -20,7 +20,7 @@ expr* make_num(int n) {
 }
 
 expr* make_app(expr* fun, expr* arg1, expr* arg2) {
-	printf("make JApp\n");
+	printf("__make JApp\n");
 	JApp* o = malloc(sizeof(JApp));
 	o->h.t = APP;
 	o->fun = fun;
@@ -30,7 +30,7 @@ expr* make_app(expr* fun, expr* arg1, expr* arg2) {
 }
 
 expr* make_bool(int v) {
-	printf("make Bool\n");
+	printf("__make Bool\n");
 	JBool* o = malloc(sizeof(JBool));
 	o->h.t = BOOL;
 	o->val = v;
@@ -38,7 +38,7 @@ expr* make_bool(int v) {
 }
 
 expr* make_prim(char* p) {
-	printf("make prim %s\n", p);
+	printf("__make prim %s\n", p);
 	prim* o = malloc(sizeof(prim));
 	o->h.t = PRIM;
 	o->p = p;
@@ -46,14 +46,14 @@ expr* make_prim(char* p) {
 }
 
 expr* make_kret() {
-	printf("make kret\n");
+	printf("__make kret\n");
 	KRet* o = malloc(sizeof(KRet));
 	o->h.t = KRET;
 	return o;
 }
 
 expr* make_kif(expr* t, expr* f, expr* k) {
-	printf("make kif\n");
+	printf("__make kif\n");
 	KIf* o = malloc(sizeof(KIf));
 	o->h.t = KIF;
 	o->t = t;
@@ -63,7 +63,7 @@ expr* make_kif(expr* t, expr* f, expr* k) {
 }
 
 expr* make_kapp(expr* fun, expr* c, expr* u, expr* k) {
-	printf("make kapp\n");
+	printf("__make kapp\n");
 	KApp* o = malloc(sizeof(KApp));
 	o->h.t = KAPP;
 	o->fun = fun;
@@ -74,7 +74,7 @@ expr* make_kapp(expr* fun, expr* c, expr* u, expr* k) {
 }
 
 expr* make_checked(expr* data, expr* next) {
-	printf("make checked\n");
+	printf("__make checked\n");
 	KChecked* o = malloc(sizeof(KChecked));
 	o->h.t = CHECKED;
 	o->data = data;
@@ -83,11 +83,37 @@ expr* make_checked(expr* data, expr* next) {
 }
 
 expr* make_unchecked(expr* data, expr* next) {
-	printf("make unchecked\n");
+	printf("__make unchecked\n");
 	KUnchecked* o = malloc(sizeof(KUnchecked));
 	o->h.t = UNCHECKED;
 	o->data = data;
 	o->next = next;
+	return o;
+}
+
+expr* make_fun(char* Name) {
+	printf("__make fun\n");
+	fun* o = malloc(sizeof(fun));
+	o->h.t = FUN;
+	o->Name = Name;
+	return o;
+}
+
+expr* make_var(char* name) {
+	printf("__make var\n");
+	var* o = malloc(sizeof(var));
+	o->h.t = FUN;
+	o->name = name;
+	return o;
+}
+
+expr* make_jdef(expr* fun, expr* params, expr* e) {
+	printf("__make jdef\n");
+	JDef* o = malloc(sizeof(JDef));
+	o->h.t = JDEF;
+	o->fun = fun;
+	o->params = params;
+	o->e = e;
 	return o;
 }
 
@@ -140,14 +166,14 @@ void eval(expr** e) {
 	while (1) {
 		switch ((*e)->t) {
 		case IF: {
-			printf("IF\n");
+			printf("@: IF\n");
 			JIf *temp = (JIf*)(*e);
 			(*e) = temp->c;
 			ok = make_kif(temp->t, temp->f, ok);
 			break;
 		}
 		case APP: {
-			printf("APP\n");
+			printf("@: APP\n");
 			JApp* temp = (JApp*)(*e);
 			(*e) = temp->fun;
 			ok = make_kapp(NULL, NULL, make_unchecked(temp->arg1, make_unchecked(temp->arg2, NULL)), ok);
@@ -155,41 +181,42 @@ void eval(expr** e) {
 		}
 		case NUM:
 		case BOOL:
+		case FUN:
 		case PRIM: {
-			printf("VALUE\n");
+			printf("@: VALUE\n");
 			switch (ok->t) {
 			case KRET: {
-				printf("KRET\n");
+				printf("@: KRET\n");
 				printf("e's value is %d\n", ((JNum*)(*e))->n);
 				return;
 			}
 			case KAPP: {
-				printf("KAPP\n");
+				printf("@: KAPP\n");
 				KApp* tempK = (KApp*)ok;
 				expr* funp = tempK->fun;
 				expr* checked = tempK->checked;
 				if (!funp) {
-					printf("!funp\n");
+					printf("\t!funp\n");
 					funp = (*e);
 					tempK->fun = funp;
 				}
 				else {
-					printf("add to checked\n");
+					printf("\tadd to checked\n");
 					checked = make_checked((*e), checked);
+					tempK->checked = checked;
 				}
 				if (tempK->unchecked == NULL) {
-					printf("Unchecked is empty\n");
-					printf("tempK->fun = %s\n", ((prim*)tempK->fun)->p);
+					printf("\tUnchecked is empty\n");
+					printf("\ttempK->fun = %s\n", ((prim*)tempK->fun)->p);
 					(*e) = delta(tempK->fun, tempK->checked);
 					ok = tempK->k;
 					break;
 				}
 				else {
-					printf("Removing one from unchecked\n");
+					printf("\tRemoving one from unchecked\n");
 					KUnchecked* uc = tempK->unchecked;
 					(*e) = uc->data;
-					tempK->checked = make_checked(uc->data, tempK->checked);
-					uc = uc->next;
+`					uc = uc->next;
 					tempK->unchecked = uc;
 					ok = tempK;
 					break;
@@ -197,7 +224,7 @@ void eval(expr** e) {
 				break;
 			}
 			case KIF: {
-				printf("KIF\n");
+				printf("@: KIF\n");
 				KIf* tempK = (KIf*)ok;
 				(*e) = boolVal((*e)) ? tempK->t : tempK->f;
 				ok = tempK->k;
@@ -211,9 +238,8 @@ void eval(expr** e) {
 
 // Main
 int main(int argc, char* argv[]) {
-	printf("Hello!\n");
-	expr* e = make_app(make_prim("+"), make_num(2), make_num(5));
+	expr* e = make_app(make_prim("+"), make_app(make_prim("*"), make_num(2), make_num(2)), make_num(5));
 	eval(&e);
 	JNum* num = (JNum*)e;
-	printf("Result of + 2 5 is %d\n", num->n);
+	printf("Result of + (* 2 2) 5 is %d\n", num->n);
 }
