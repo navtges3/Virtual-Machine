@@ -7,6 +7,43 @@ public interface Jexpr {
 	public Jexpr step();
 }
 
+class JFun implements Jexpr {
+	public String Name;
+	public JFun(String Name) {
+		this.Name = Name;
+	}
+	public Jexpr interp() {
+		return this;
+	}
+	public String pp() {
+		return "" + Name;
+	}
+	public Boolean isValue() {
+		return true;
+	}
+	public Jexpr step() {
+		return this;
+	}
+}
+
+class JVar implements Jexpr {
+	public String name;
+	public JVar(String name) {
+		this.name = name;
+	}
+	public Jexpr interp() {
+		return this;
+	}
+	public String pp() {
+		return "" + name;
+	}
+	public Boolean isValue() {
+		return false;
+	}
+	public Jexpr step() {
+		return this;
+	}}
+
 class JNull implements Jexpr {
 	public String pp() { 
 		return "";
