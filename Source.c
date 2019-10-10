@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "Header.h"
 
-JDef** map = NULL;
+Map* map = NULL;
 
 expr* make_if(expr* c, expr* t, expr* f) {
 	printf("__make JIF\n");
@@ -54,22 +54,24 @@ expr* make_kret() {
 	return o;
 }
 
-expr* make_kif(expr* t, expr* f, expr* k) {
+expr* make_kif(expr* env, expr* t, expr* f, expr* k) {
 	printf("__make kif\n");
 	KIf* o = malloc(sizeof(KIf));
 	o->h.t = KIF;
+	o->env = env;
 	o->t = t;
 	o->f = f;
 	o->k = k;
 	return o;
 }
 
-expr* make_kapp(expr* fun, expr* c, expr* u, expr* k) {
+expr* make_kapp(expr* fun, expr* c, expr* env, expr* u, expr* k) {
 	printf("__make kapp\n");
 	KApp* o = malloc(sizeof(KApp));
 	o->h.t = KAPP;
 	o->fun = fun;
 	o->checked = c;
+	o->env = env;
 	o->unchecked = u;
 	o->k = k;
 	return o;
@@ -102,12 +104,32 @@ expr* make_fun(char* Name, expr* params) {
 	return o;
 }
 
-expr* make_var(char* name) {
-	printf("__make var\n");
+expr* make_var(char* n) {
+	printf("__make var of %s\n", n);
 	var* o = malloc(sizeof(var));
-	o->h.t = FUN;
-	o->name = name;
+	o->h.t = VAR;
+	o->name = n;
 	return o;
+}
+
+void mapPush(expr* def) {
+	Map* temp = malloc(sizeof(Map*));
+	temp->def = def;
+	temp->next = map;
+	map = temp;
+}
+
+expr* inMap(expr* f) {
+	Fun* fun = (Fun*)f;
+	Map* temp = map;
+	while (temp != NULL) {
+		if (strcmp(((Fun*)temp->def->fun)->Name, fun->Name) == 0) {
+			return temp->def;
+		}
+		else
+			temp = temp->next;
+	}
+	return NULL;
 }
 
 expr* make_jdef(expr* fun, expr* e) {
@@ -119,33 +141,19 @@ expr* make_jdef(expr* fun, expr* e) {
 	o->h.t = JDEF;
 	o->fun = fun;
 	o->e = e;
-	pushToMap(o);
+	mapPush(o);
 	return o;
 }
 
-int inMap(expr* f) {
-	Fun* fun = (Fun*)f;
-	int i;
-	if (map == NULL)
-		map = malloc(sizeof(JDef*));
-	else {
-		for (i = 0; i < (sizeof(map) / sizeof(JDef*)); ++i) {
-			if (strcmp(((Fun*)map[i]->fun)->Name, fun->Name))
-				return i;
-		}
-	}
-	return 0;
-}
-
-void pushToMap(expr* def) {
-	int i;
-	JDef** temp = malloc(sizeof(map) + sizeof(JDef*));
-	for (i = 0; i < (sizeof(map) / sizeof(JDef*)); ++i) {
-		temp[i] = map[i];
-	}
-	temp[i] = def;
-	free(map);
-	map = temp;
+expr* make_jenv(expr* v, expr* val, expr* next) {
+	printf("__make jenv\n");
+	printf("____var tag = %d\n", v->t);
+	JEnv* o = malloc(sizeof(JEnv));
+	o->h.t = ENV;
+	o->v = v;
+	o->val = val;
+	o->next = next;
+	return o;
 }
 
 //enum tag { IF, NUM, APP, BOOL, PRIM, KRET, KIF, KAPP, CHECKED, UNCHECKED };
@@ -223,46 +231,70 @@ expr* delta(expr* fun, expr* checked) {
 
 void eval(expr** e) {
 	expr *ok = make_kret();
+	expr *env = NULL;
 
 	while (1) {
+		printf("TAG: %d\n", (*e)->t);
 		switch ((*e)->t) {
 		case IF: {
 			printf("@: IF\n");
 			JIf *temp = (JIf*)(*e);
 			(*e) = temp->c;
-			ok = make_kif(temp->t, temp->f, ok);
+			ok = make_kif(env, temp->t, temp->f, ok);
 			break;
 		}
 		case APP: {
 			printf("@: APP\n");
 			JApp* temp = (JApp*)(*e);
+			printf("TEMP: %d, %d, %d\n", temp->fun->t, temp->arg1->t, temp->arg2->t);
 			(*e) = temp->fun;
-			ok = make_kapp(NULL, NULL, make_unchecked(temp->arg1, make_unchecked(temp->arg2, NULL)), ok);
+			ok = make_kapp(NULL, NULL, env, make_unchecked(temp->arg1, make_unchecked(temp->arg2, NULL)), ok);
 			break;
 		}
 		case FUN: {
 			printf("@: FUN\n");
 			Fun* temp = (Fun*)(*e);
-			int index = inMap(temp);
-			if (index) {
-				expr* defexpr = map[index]->e;
-				expr* pnode = ((Fun*)map[index]->fun)->params;
+			expr* def = inMap(temp);
+			if (def != NULL) {
+				expr* defexpr = ((JDef*)def)->e;
+				expr* pnode = ((Fun*)((JDef*)def)->fun)->params;
 				expr* cnode = temp->params;
+				expr* envir = NULL;
 
 				while (pnode != NULL && cnode != NULL) {
-					defexpr = subst(defexpr, ((KChecked*)pnode)->data, ((KChecked*)cnode)->data);
+					envir = make_jenv(((KChecked*)pnode)->data, ((KChecked*)cnode)->data, envir);
 					pnode = ((KChecked*)pnode)->next;
 					cnode = ((KChecked*)cnode)->next;
 				}
 				*e = defexpr;
+				env = envir;
 			}
+			break;
+		}
+
+		case VAR: {
+			printf("@: VAR\n");
+			var* temp = (var*)(*e);
+			JEnv* nav = env;
+			printf("^^^ nav->t = %d\n", nav->v->h.t);
+			while (nav != NULL) {
+				printf("def: %s\n", nav->v->name);
+				printf("temp: %s\n", temp->name);
+				if (strcmp(((var*)nav->v)->name, temp->name) == 0) {
+					(*e) = nav->val;
+					nav = NULL;
+				}
+				else
+					nav = ((JEnv*)nav)->next;
+			}
+
 			break;
 		}
 
 		case NUM:
 		case BOOL:
 		case PRIM: {
-			printf("@: VALUE\n");
+			printf("@: VALUE of %d\n", (*e)->t);
 			switch (ok->t) {
 			case KRET: {
 				printf("@: KRET\n");
@@ -288,6 +320,7 @@ void eval(expr** e) {
 					printf("\tUnchecked is empty\n");
 					printf("\ttempK->fun = %s\n", ((prim*)tempK->fun)->p);
 					(*e) = delta(tempK->fun, tempK->checked);
+					env = tempK->env;
 					ok = tempK->k;
 					break;
 				}
@@ -306,6 +339,7 @@ void eval(expr** e) {
 				printf("@: KIF\n");
 				KIf* tempK = (KIf*)ok;
 				(*e) = boolVal((*e)) ? tempK->t : tempK->f;
+				env = tempK->env;
 				ok = tempK->k;
 				break;
 			}
@@ -317,8 +351,10 @@ void eval(expr** e) {
 
 // Main
 int main(int argc, char* argv[]) {
-	expr* e = make_app(make_prim("+"), make_app(make_prim("*"), make_num(2), make_num(2)), make_num(5));
+	make_jdef(make_fun("My fun", make_checked(make_var("x1"), make_checked(make_var("x2"), NULL))), make_app(make_prim("*"), make_var("x1"), make_var("x2")));
+
+	expr* e = make_fun("My fun", make_checked(make_num(3), make_checked(make_num(4), NULL)));
 	eval(&e);
 	JNum* num = (JNum*)e;
-	printf("Result of + (* 2 2) 5 is %d\n", num->n);
+	printf("Result is %d\n", num->n);
 }
