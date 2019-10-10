@@ -53,7 +53,7 @@ class JVar implements Jexpr {
 		else
 			return this;
 	}
-	}
+}
 
 class JNull implements Jexpr {
 	public String pp() { 
@@ -247,7 +247,7 @@ class JApp implements Jexpr {
 			((JCons)((JCons)args).rhs).lhs = ((JCons)((JCons)args).rhs).lhs.step();
 			return this;
 		}
-		
+
 		String p = ((JPrim)fun).prim;
 		int lhs = ((JNumber)((JCons)args).lhs).num;
 		int rhs = ((JNumber)((JCons)((JCons)args).rhs).lhs).num;
