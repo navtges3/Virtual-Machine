@@ -10,6 +10,7 @@ public interface Jexpr {
 
 class JFun implements Jexpr {
 	public String Name;
+	public Jexpr params;
 	public JFun(String Name) {
 		this.Name = Name;
 	}
@@ -17,7 +18,7 @@ class JFun implements Jexpr {
 		return this;
 	}
 	public String pp() {
-		return "" + Name;
+		return "(" + Name + params.pp() + ")";
 	}
 	public Boolean isValue() {
 		return true;

@@ -9,7 +9,7 @@ import java.util.Map;
 public class Main {
 
 	public static int test_passed = 0;
-	public static HashMap<String, Jexpr> sigMap = new HashMap<String, Jexpr>();
+	public static HashMap<String, Define> sigMap = new HashMap<String, Define>();
 	
 	public static void main(String[] args) throws IOException {
 		Jexpr e = JA(JM(JN(2), JN(4)), JN(8));
@@ -142,6 +142,22 @@ public class Main {
 			return e;
 		}
 
+		if(e instanceof JFun) {
+			if(sigMap.containsKey(((JFun)e).Name)) {
+				Define def = sigMap.get(((JFun)e).Name);
+				Jexpr expr = def.e;
+				Jexpr pnode = def.fun.params;
+				Jexpr cnode = ((JFun)e).params;
+				
+				while(!(pnode instanceof JNull) && !(cnode instanceof JNull)) {
+					expr = expr.subst(((JVar)((JCons)pnode).lhs), ((JCons)cnode).rhs);
+					pnode = ((JCons)pnode).rhs;
+					cnode = ((JCons)cnode).rhs;
+				}
+				return expr;
+			}
+		}
+		
 		if(e instanceof JIf) {
 			if(((JIf)e).cond.isValue()) {
 				c = new CHole();
