@@ -5,6 +5,7 @@ public interface Jexpr {
 	public String pp();
 	public Boolean isValue();
 	public Jexpr step();
+	public Jexpr subst(JVar x, Jexpr v);
 }
 
 class JFun implements Jexpr {
@@ -22,6 +23,9 @@ class JFun implements Jexpr {
 		return true;
 	}
 	public Jexpr step() {
+		return this;
+	}
+	public Jexpr subst(JVar x, Jexpr v) {
 		return this;
 	}
 }
@@ -42,7 +46,14 @@ class JVar implements Jexpr {
 	}
 	public Jexpr step() {
 		return this;
-	}}
+	}
+	public Jexpr subst(JVar x, Jexpr v) {
+		if(this == x)
+			return v;
+		else
+			return this;
+	}
+	}
 
 class JNull implements Jexpr {
 	public String pp() { 
@@ -58,6 +69,9 @@ class JNull implements Jexpr {
 		return this;
 	}
 	public Jexpr step() {
+		return this;
+	}
+	public Jexpr subst(JVar x, Jexpr v) {
 		return this;
 	}
 }
@@ -80,6 +94,9 @@ class JCons implements Jexpr {
 	public Jexpr step() {
 		return lhs.step();
 	}
+	public Jexpr subst(JVar x, Jexpr v) {
+		return new JCons(lhs.subst(x, v), rhs.subst(x, v));
+	}
 }
 
 class JPrim implements Jexpr {
@@ -97,6 +114,9 @@ class JPrim implements Jexpr {
 		return this;
 	}
 	public Jexpr step() {
+		return this;
+	}
+	public Jexpr subst(JVar x, Jexpr v) {
 		return this;
 	}
 }
@@ -118,6 +138,9 @@ class JNumber implements Jexpr {
 	public Jexpr step() {
 		return this;
 	}
+	public Jexpr subst(JVar x, Jexpr v) {
+		return this;
+	}
 }
 
 class JBool implements Jexpr {
@@ -135,6 +158,9 @@ class JBool implements Jexpr {
 		return this;
 	}
 	public Jexpr step() {
+		return this;
+	}
+	public Jexpr subst(JVar x, Jexpr v) {
 		return this;
 	}
 }
@@ -174,6 +200,9 @@ class JIf implements Jexpr {
 			cond = newCond;
 			return this;
 		}
+	}
+	public Jexpr subst(JVar x, Jexpr v) {
+		return new JIf(cond.subst(x, v), texpr.subst(x, v), fexpr.subst(x, v));
 	}
 }
 
@@ -234,5 +263,8 @@ class JApp implements Jexpr {
 		if ( p.equals("!=") ){ return new JBool(lhs != rhs); }
 
 		return new JNumber(6969); 
+	}
+	public Jexpr subst(JVar x, Jexpr v) {
+		return new JApp(fun.subst(x, v), args.subst(x, v));
 	}
 }
