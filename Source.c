@@ -259,7 +259,7 @@ void eval(expr** e) {
 				expr* defexpr = ((JDef*)def)->e;
 				expr* pnode = ((Fun*)((JDef*)def)->fun)->params;
 				expr* cnode = temp->params;
-				expr* envir = NULL;
+				expr* envir = env;
 
 				while (pnode != NULL && cnode != NULL) {
 					envir = make_jenv(((KChecked*)pnode)->data, ((KChecked*)cnode)->data, envir);
@@ -352,8 +352,9 @@ void eval(expr** e) {
 // Main
 int main(int argc, char* argv[]) {
 	make_jdef(make_fun("My fun", make_checked(make_var("x1"), make_checked(make_var("x2"), NULL))), make_app(make_prim("*"), make_var("x1"), make_var("x2")));
+	make_jdef(make_fun("Double", make_checked(make_var("x"), NULL)), make_app(make_prim("+"), make_var("x"), make_var("x1")));
 
-	expr* e = make_fun("My fun", make_checked(make_num(3), make_checked(make_num(4), NULL)));
+	expr* e = make_fun("My fun", make_checked(make_num(3), make_checked(make_fun("Double", make_checked(make_num(2), NULL)), NULL)));
 	eval(&e);
 	JNum* num = (JNum*)e;
 	printf("Result is %d\n", num->n);
