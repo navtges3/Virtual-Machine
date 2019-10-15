@@ -8,11 +8,13 @@ public interface Jexpr {
 	public Jexpr subst(JVar x, Jexpr v);
 }
 
-class JFun implements Jexpr {
+class lambda implements Jexpr {
 	public String Name;
 	public Jexpr params;
-	public JFun(String Name) {
+	public lambda(String Name, Jexpr params, Jexpr e) {
 		this.Name = Name;
+		this.params = params;
+		
 	}
 	public Jexpr interp() {
 		return this;
