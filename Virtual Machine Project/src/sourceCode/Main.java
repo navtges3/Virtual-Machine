@@ -185,6 +185,17 @@ public class Main {
 			return new JIf( desugar(((SE_Cons)((SE_Cons)se).rhs).lhs),
 					desugar(((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).lhs),
 					desugar(((SE_Cons)((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).rhs).lhs) );
+		
+		//lambda
+		if(se instanceof SE_Cons
+				&& ((SE_Cons)se).lhs instanceof SE_String
+				&& ((SE_String)((SE_Cons)se).lhs).str.equals("let")
+				&& ((SE_Cons)se).rhs instanceof SE_Cons)
+			return new lambda(((SE_String)((SE_Cons)((SE_Cons)se).rhs).lhs).str,
+					desugar(((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).lhs), 
+					desugar(((SE_Cons)((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).rhs).lhs));
+			
+		
 		//Error Code
 		return JN(42069);
 	}
@@ -283,5 +294,9 @@ public class Main {
 	//represent a JIf as a Sexpr
 	public static Sexpr SIf(Sexpr c, Sexpr l, Sexpr r) {
 		return new SE_Cons(new SE_String("if"), new SE_Cons(c, new SE_Cons(l, new SE_Cons(r, new SE_Empty()))));
+	}
+	//represent a lambda as a Sexpr
+	public static Sexpr Slambda(Sexpr name, Sexpr e1, Sexpr e2) {
+		return new SE_Cons(new SE_String("let"), new SE_Cons(name, new SE_Cons(e1, new SE_Cons(e2, new SE_Empty()))));
 	}
 }
