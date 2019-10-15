@@ -10,17 +10,18 @@ public interface Jexpr {
 
 class lambda implements Jexpr {
 	public String Name;
-	public Jexpr params;
-	public lambda(String Name, Jexpr params, Jexpr e) {
+	public Jexpr vars;
+	public Jexpr e;
+	public lambda(String Name, Jexpr vars, Jexpr e) {
 		this.Name = Name;
-		this.params = params;
-		
+		this.vars = vars;
+		this.e = e;
 	}
 	public Jexpr interp() {
 		return this;
 	}
 	public String pp() {
-		return "(" + Name + params.pp() + ")";
+		return "(" + Name + " " + vars.pp() + ") " + e.pp();
 	}
 	public Boolean isValue() {
 		return true;
@@ -29,7 +30,7 @@ class lambda implements Jexpr {
 		return this;
 	}
 	public Jexpr subst(JVar x, Jexpr v) {
-		return this;
+		return this.e.subst(x, v);
 	}
 }
 
@@ -51,7 +52,7 @@ class JVar implements Jexpr {
 		return this;
 	}
 	public Jexpr subst(JVar x, Jexpr v) {
-		if(this == x)
+		if(this.name.equals(x.name))
 			return v;
 		else
 			return this;

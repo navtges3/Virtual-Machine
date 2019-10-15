@@ -10,13 +10,15 @@ public class Main {
 
 	public static int test_passed = 0;
 	public static HashMap<String, Define> sigMap = new HashMap<String, Define>();
-	
+
 	public static void main(String[] args) throws IOException {
 		Jexpr e = JA(JM(JN(2), JN(4)), JN(8));
 		System.out.println("CC0: " + CC0.interp(e).pp());
 		System.out.println("Big: " + e.interp().pp());
 		emit(e);
-		//runTests();
+
+		test_j3();
+		runTests();
 	}
 
 	public static void emit(Jexpr e) throws IOException {
@@ -28,16 +30,19 @@ public class Main {
 		printWriter.printf("int main(int argc, char* argv[]) {\n");
 
 		if(e instanceof JApp) {
-			printWriter.printf("expr* 0 = " + printJApp(e) + ";\n");
+			printWriter.printf("expr* o = " + printJApp(e) + ";\n");
 		}
 		else if (e instanceof JIf) {
-			printWriter.printf("expr* 0 = " + printJIf(e) + ";\n");
+			printWriter.printf("expr* o = " + printJIf(e) + ";\n");
 		}
 		else if (e instanceof JNumber) {
-			printWriter.printf("expr* 0 = " + printJNum(e) + ";\n");
+			printWriter.printf("expr* o = " + printJNum(e) + ";\n");
 		}
 		else if (e instanceof JBool) {
-			printWriter.printf("expr* 0 = " + printJBool(e) + ";\n");
+			printWriter.printf("expr* o = " + printJBool(e) + ";\n");
+		}
+		else if (e instanceof lambda) {
+			printWriter.printf("expr* o = " + printLambda(e) + ";\n");
 		}
 		printWriter.printf("return 0;\n");
 		printWriter.printf("}");
@@ -45,11 +50,44 @@ public class Main {
 		printWriter.close();
 	}
 
+	private static String printLambda(Jexpr e) {
+		String output = "make_lambda(";
+
+		output = output.concat(printCons(((lambda)e).vars));
+		output = output.concat(")");
+		return output;
+	}
+
+	private static String printCons(Jexpr e) {
+		String output = "";
+
+		if(e instanceof JCons) {
+			if(((JCons)e).lhs instanceof JIf) {
+				output = output.concat(printJIf(((JCons)e).lhs));
+			}
+			else if (((JCons)e).lhs instanceof JApp) {
+				output = output.concat(printJApp(((JCons)e).lhs));
+			}
+			else if (((JCons)e).lhs instanceof JBool) {
+				output = output.concat(printJBool(((JCons)e).lhs));
+			}
+			else if (((JCons)e).lhs instanceof JNumber) {
+				output = output.concat(printJNum(((JCons)e).lhs));
+			}
+			else if (((JCons)e).lhs instanceof JVar) {
+				output = output.concat("make_var(" + ((JVar)((JCons)e).lhs).name + ")");
+			}
+		}
+
+		output = output.concat(printCons(((JCons)e).rhs));
+		return output;
+	}
+
 	private static String printJApp(Jexpr e) {
 		String output = "make_app(";
 		//fun
 		output = output.concat("make_prim(" + ((JPrim)((JApp)e).fun).prim + "), ");
-		
+
 		//arg1
 		if(((JCons)((JApp)e).args).lhs instanceof JIf)
 			output = output.concat(printJIf(((JCons)((JApp)e).args).lhs));
@@ -59,9 +97,9 @@ public class Main {
 			output = output.concat(printJBool(((JCons)((JApp)e).args).lhs));
 		else if(((JCons)((JApp)e).args).lhs instanceof JNumber)
 			output = output.concat(printJNum(((JCons)((JApp)e).args).lhs));
-		
+
 		output = output.concat(", ");
-		
+
 		//arg2
 		if(((JCons)((JCons)((JApp)e).args).rhs).lhs instanceof JIf)
 			output = output.concat(printJIf(((JCons)((JCons)((JApp)e).args).rhs).lhs));
@@ -76,7 +114,7 @@ public class Main {
 		System.out.println(output);
 		return output;
 	}
-	
+
 	private static String printJIf(Jexpr e) {
 		String output = "make_if(";
 		//cond
@@ -88,7 +126,7 @@ public class Main {
 			output = output.concat(printJBool(((JIf)e).cond) + ", ");
 		else if(((JIf)e).cond instanceof JNumber)
 			output = output.concat(printJNum(((JIf)e).cond) + ", ");
-		
+
 		//true
 		if(((JIf)e).texpr instanceof JIf)
 			output = output.concat(printJIf(((JIf)e).texpr) + ", ");
@@ -110,11 +148,11 @@ public class Main {
 			output = output.concat(printJNum(((JIf)e).fexpr) + ")");
 		return output;
 	}
-	
+
 	private static String printJBool(Jexpr e) {
 		return "make_bool(" + ((JBool)e).val + ")";
 	}
-	
+
 	private static String printJNum(Jexpr e) {
 		return "make_num(" + ((JNumber)e).num + ")";
 	}
@@ -185,7 +223,7 @@ public class Main {
 			return new JIf( desugar(((SE_Cons)((SE_Cons)se).rhs).lhs),
 					desugar(((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).lhs),
 					desugar(((SE_Cons)((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).rhs).lhs) );
-		
+
 		//lambda
 		if(se instanceof SE_Cons
 				&& ((SE_Cons)se).lhs instanceof SE_String
@@ -194,8 +232,8 @@ public class Main {
 			return new lambda(((SE_String)((SE_Cons)((SE_Cons)se).rhs).lhs).str,
 					desugar(((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).lhs), 
 					desugar(((SE_Cons)((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).rhs).lhs));
-			
-		
+
+
 		//Error Code
 		return JN(42069);
 	}
@@ -219,6 +257,43 @@ public class Main {
 
 	public static void test_num(Sexpr se, int expected) {
 		test(se, JN(expected));
+	}
+
+	public static void test_j3() {
+		Jexpr e1 = JA(JN(7), new JVar("x"));
+		Jexpr e2 = JM(JN(7), new JVar("x"));
+		Jexpr e3 = JA(new JVar("x"), JN(7));
+		Jexpr e4 = JM(new JVar("x"), JN(7));
+
+		Jexpr function = new lambda("func", new JCons(new JVar("x"), new JNull()), e1);
+		Jexpr result = function.subst(new JVar("x"), JN(5));
+		if(result.interp().pp().equals("12"))
+			test_passed++;
+
+		function = new lambda("func", new JCons(new JVar("x"), new JNull()), e2);
+		result = function.subst(new JVar("x"), JN(5));
+		if(result.interp().pp().equals("35"))
+			test_passed++;
+		
+		function = new lambda("func", new JCons(new JVar("x"), new JNull()), function);
+		result = function.subst(new JVar("x"), JN(5));
+		if(result.interp().pp().equals("35"))
+			test_passed++;
+		
+		function = new lambda("func", new JCons(new JVar("x"), new JNull()), e3);
+		result = function.subst(new JVar("x"), JN(5));
+		if(result.interp().pp().equals("12"))
+			test_passed++;
+
+		function = new lambda("func", new JCons(new JVar("x"), new JNull()), e4);
+		result = function.subst(new JVar("x"), JN(5));
+		if(result.interp().pp().equals("35"))
+			test_passed++;
+		
+		function = new lambda("func", new JCons(new JVar("x"), new JNull()), function);
+		result = function.subst(new JVar("x"), JN(5));
+		if(result.interp().pp().equals("35"))
+			test_passed++;
 	}
 
 	public static void runTests() {
