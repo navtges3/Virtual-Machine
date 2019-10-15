@@ -294,6 +294,12 @@ public class Main {
 		result = function.subst(new JVar("x"), JN(5));
 		if(result.interp().pp().equals("35"))
 			test_passed++;
+		
+		Sexpr se = Slambda(new SE_String("new func"), new SE_Empty(), SA(SN(3), SN(5)));
+		Jexpr test = desugar(se);
+		if(test.subst(null, null).interp().pp().equals("8"))
+			test_passed++;
+
 	}
 
 	public static void runTests() {
