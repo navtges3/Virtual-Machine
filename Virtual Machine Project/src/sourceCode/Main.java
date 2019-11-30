@@ -243,6 +243,13 @@ public class Main {
 	 * Testing functions *
 	 *                   *
 	 *********************/
+	public static void lambdaFactorial() {
+		Jexpr fac = new lambda("fac", new JCons(new JVar("n"), new JNull()), //function
+				new JIf(new lambda("zero?", new JCons(new JVar("n"), new JNull()), new JIf(new JVar("n"), new JBool(true), new JBool(false))), // is zero?
+						new lambda("one", new JCons(new JVar("f"), new JCons(new JVar("x"), new JNull())), new JCons(new JVar("x"), new JNull())), //one
+						new lambda("mult", new JCons(new JVar("n"), new JCons(new JVar("m"), new JNull()), new JApp(new JPrim("*"), new JCons(new JVar("n"), new JCons(new JVar("m"), new JNull())))))
+	}
+	
 	public static void test(Sexpr se, Jexpr expected) {
 		Jexpr expr = desugar(se);
 		Jexpr val = expr.interp();
