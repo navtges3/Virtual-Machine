@@ -1,7 +1,7 @@
 #pragma once
 #include <string.h>
 
-enum tag { IF, NUM, APP, BOOL, PRIM, KRET, KIF, KAPP, CHECKED, UNCHECKED, LAMBDA, VAR, JDEF, ENV};
+enum tag { IF, NUM, APP, BOOL, PRIM, KRET, KIF, KAPP, CHECKED, UNCHECKED, LAMBDA, VAR, JDEF, ENV, CLOS};
 
 typedef struct { enum tag t; }expr;
 
@@ -90,6 +90,12 @@ typedef struct {
 	expr*	val;
 	expr*	next;
 }JEnv;
+
+typedef struct {
+	expr	h;
+	expr*	lambda;
+	expr*	env;
+}Closure;
 
 typedef struct M{
 	JDef* def;

@@ -104,6 +104,14 @@ expr* make_lambda(char* Name, expr* params) {
 	return o;
 }
 
+expr* make_closure(expr* lambda, expr* env) {
+	printf("__make closure\n");
+	Closure* o = malloc(sizeof(Closure));
+	o->h.t = CLOS;
+	o->lambda = lambda;
+	o->env = env;
+}
+
 expr* make_var(char* n) {
 	printf("__make var of %s\n", n);
 	var* o = malloc(sizeof(var));
@@ -252,24 +260,10 @@ void eval(expr** e) {
 			break;
 		}
 		case LAMBDA: {
-			printf("@: FUN\n");
-			lambda* temp = (lambda*)(*e);
-			expr* def = inMap(temp);
-			if (def != NULL) {
-				expr* defexpr = ((JDef*)def)->e;
-				expr* pnode = ((lambda*)((JDef*)def)->fun)->params;
-				expr* cnode = temp->params;
-				expr* envir = NULL;
+			printf("@ LAMBDA\n");
 
-				while (pnode != NULL && cnode != NULL) {
-					envir = make_jenv(((KChecked*)pnode)->data, ((KChecked*)cnode)->data, envir);
-					pnode = ((KChecked*)pnode)->next;
-					cnode = ((KChecked*)cnode)->next;
-				}
-				*e = defexpr;
-				env = envir;
-			}
-			break;
+			e = make_closure(e, env);
+			env = NULL;
 		}
 
 		case VAR: {
@@ -290,7 +284,7 @@ void eval(expr** e) {
 
 			break;
 		}
-
+		case CLOS:
 		case NUM:
 		case BOOL:
 		case PRIM: {
@@ -306,6 +300,38 @@ void eval(expr** e) {
 				KApp* tempK = (KApp*)ok;
 				expr* funp = tempK->fun;
 				expr* checked = tempK->checked;
+
+				if (((KChecked*)checked)->data->t == CLOS) {
+					expr* checkedParams = NULL;
+					expr* uncheckedParams = ((lambda*)((Closure*)((KChecked*)checked)->data)->lambda)->params;
+
+					while (uncheckedParams != NULL) {
+						if (((KChecked*)uncheckedParams)->data->t == VAR) {
+							JEnv* thisEnv = ((JEnv*)((Closure*)((KChecked*)checked)->data)->env);
+							while (thisEnv != NULL) {
+								if (((var*)((KChecked*)uncheckedParams)->data)->name == thisEnv->v->name) {
+									((KChecked*)uncheckedParams)->data = thisEnv->val;
+									thisEnv = NULL;
+								}
+								else
+									thisEnv = thisEnv->next;
+							}
+						}
+						if (checkedParams == NULL) {
+							checkedParams = make_checked(((KChecked*)uncheckedParams)->data, NULL);
+						}
+						else {
+							expr* temp = checkedParams;
+							while (((KChecked*)temp)->next != NULL) {
+								temp = ((KChecked*)temp)->next;
+							}
+							((KChecked*)temp)->next = make_checked(((KChecked*)uncheckedParams)->data, NULL);
+						}
+						uncheckedParams = ((KChecked*)uncheckedParams)->next;
+					}
+					((lambda*)((Closure*)((KChecked*)checked)->data)->lambda)->params = checkedParams;
+				}
+
 				if (!funp) {
 					printf("\t!funp\n");
 					funp = (*e);
@@ -351,11 +377,5 @@ void eval(expr** e) {
 
 // Main
 int main(int argc, char* argv[]) {
-	make_jdef(make_fun("My fun", make_checked(make_var("x1"), make_checked(make_var("x2"), NULL))), make_app(make_prim("*"), make_var("x1"), make_var("x2")));
-	make_jdef(make_fun("Double", make_checked(make_var("x"), NULL)), make_app(make_prim("+"), make_var("x"), make_var("x")));
-
-	expr* e = make_fun("My fun", make_checked(make_num(3), make_checked(make_fun("Double", make_checked(make_num(2), NULL)), NULL)));
-	eval(&e);
-	JNum* num = (JNum*)e;
-	printf("Result is %d\n", num->n);
+	
 }
