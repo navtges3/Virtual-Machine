@@ -224,12 +224,21 @@ public class Main {
 					desugar(((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).lhs),
 					desugar(((SE_Cons)((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).rhs).lhs) );
 
-		//lambda
+		//lambda j4
+		if(se instanceof SE_Cons
+				&& ((SE_Cons)se).lhs instanceof SE_String
+				&& ((SE_String)((SE_Cons)se).lhs).str.equals("let")
+				&& ((SE_Cons)se).rhs instanceof SE_Cons
+				&& ((SE_Cons)((SE_Cons)se).rhs).rhs instanceof SE_String)
+			return new lambda(((SE_String)((SE_Cons)((SE_Cons)se).rhs).lhs).str,
+					desugar(((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).lhs), 
+					desugar(((SE_Cons)((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).rhs).lhs));
+		// j3
 		if(se instanceof SE_Cons
 				&& ((SE_Cons)se).lhs instanceof SE_String
 				&& ((SE_String)((SE_Cons)se).lhs).str.equals("let")
 				&& ((SE_Cons)se).rhs instanceof SE_Cons)
-			return new lambda(((SE_String)((SE_Cons)((SE_Cons)se).rhs).lhs).str,
+			return new lambda("func",
 					desugar(((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).lhs), 
 					desugar(((SE_Cons)((SE_Cons)((SE_Cons)((SE_Cons)se).rhs).rhs).rhs).lhs));
 
@@ -243,13 +252,14 @@ public class Main {
 	 * Testing functions *
 	 *                   *
 	 *********************/
+	/*
 	public static void lambdaFactorial() {
 		Jexpr fac = new lambda("fac", new JCons(new JVar("n"), new JNull()), //function
 				new JIf(new lambda("zero?", new JCons(new JVar("n"), new JNull()), new JIf(new JVar("n"), new JBool(true), new JBool(false))), // is zero?
 						new lambda("one", new JCons(new JVar("f"), new JCons(new JVar("x"), new JNull())), new JCons(new JVar("x"), new JNull())), //one
 						new lambda("mult", new JCons(new JVar("n"), new JCons(new JVar("m"), new JNull()), new JApp(new JPrim("*"), new JCons(new JVar("n"), new JCons(new JVar("m"), new JNull())))))
 	}
-	
+	*/
 	public static void test(Sexpr se, Jexpr expected) {
 		Jexpr expr = desugar(se);
 		Jexpr val = expr.interp();
