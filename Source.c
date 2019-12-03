@@ -260,10 +260,12 @@ void eval(expr** e) {
 			break;
 		}
 		case LAMBDA: {
-			printf("@ LAMBDA\n");
-
+			printf("@: LAMBDA\n");
+			((JEnv*)env) = make_jenv(((lambda*)e)->Name, NULL, env);
 			e = make_closure(e, env);
+			((JEnv*)env)->val = e;
 			env = NULL;
+			break;
 		}
 
 		case VAR: {
