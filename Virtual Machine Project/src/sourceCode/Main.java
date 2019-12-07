@@ -3,22 +3,13 @@ package sourceCode;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Main {
 
 	public static int test_passed = 0;
-	public static HashMap<String, Define> sigMap = new HashMap<String, Define>();
 
 	public static void main(String[] args) throws IOException {
-		Jexpr e = JA(JM(JN(2), JN(4)), JN(8));
-		System.out.println("CC0: " + CC0.interp(e).pp());
-		System.out.println("Big: " + e.interp().pp());
-		emit(e);
-
-		test_j3();
-		runTests();
+		
 	}
 
 	public static void emit(Jexpr e) throws IOException {
@@ -245,115 +236,6 @@ public class Main {
 
 		//Error Code
 		return JN(42069);
-	}
-
-	/*********************
-	 *                   *
-	 * Testing functions *
-	 *                   *
-	 *********************/
-	/*
-	public static void lambdaFactorial() {
-		Jexpr fac = new lambda("fac", new JCons(new JVar("n"), new JNull()), //function
-				new JIf(new lambda("zero?", new JCons(new JVar("n"), new JNull()), new JIf(new JVar("n"), new JBool(true), new JBool(false))), // is zero?
-						new lambda("one", new JCons(new JVar("f"), new JCons(new JVar("x"), new JNull())), new JCons(new JVar("x"), new JNull())), //one
-						new lambda("mult", new JCons(new JVar("n"), new JCons(new JVar("m"), new JNull()), new JApp(new JPrim("*"), new JCons(new JVar("n"), new JCons(new JVar("m"), new JNull())))))
-	}
-	*/
-	public static void test(Sexpr se, Jexpr expected) {
-		Jexpr expr = desugar(se);
-		Jexpr val = expr.interp();
-
-		System.out.println(se.pp() + " desugars to " + expr.pp());
-		if(!val.pp().equals(expected.interp().pp()))
-			System.out.println(val.pp() + " != expected val of " + expected.interp().pp());
-		else {
-			test_passed++;
-		}
-	}
-
-	public static void test_num(Sexpr se, int expected) {
-		test(se, JN(expected));
-	}
-
-	public static void test_j3() {
-		Jexpr e1 = JA(JN(7), new JVar("x"));
-		Jexpr e2 = JM(JN(7), new JVar("x"));
-		Jexpr e3 = JA(new JVar("x"), JN(7));
-		Jexpr e4 = JM(new JVar("x"), JN(7));
-
-		Jexpr function = new lambda("func", new JCons(new JVar("x"), new JNull()), e1);
-		Jexpr result = function.subst(new JVar("x"), JN(5));
-		if(result.interp().pp().equals("12"))
-			test_passed++;
-
-		function = new lambda("func", new JCons(new JVar("x"), new JNull()), e2);
-		result = function.subst(new JVar("x"), JN(5));
-		if(result.interp().pp().equals("35"))
-			test_passed++;
-		
-		function = new lambda("func", new JCons(new JVar("x"), new JNull()), function);
-		result = function.subst(new JVar("x"), JN(5));
-		if(result.interp().pp().equals("35"))
-			test_passed++;
-		
-		function = new lambda("func", new JCons(new JVar("x"), new JNull()), e3);
-		result = function.subst(new JVar("x"), JN(5));
-		if(result.interp().pp().equals("12"))
-			test_passed++;
-
-		function = new lambda("func", new JCons(new JVar("x"), new JNull()), e4);
-		result = function.subst(new JVar("x"), JN(5));
-		if(result.interp().pp().equals("35"))
-			test_passed++;
-		
-		function = new lambda("func", new JCons(new JVar("x"), new JNull()), function);
-		result = function.subst(new JVar("x"), JN(5));
-		if(result.interp().pp().equals("35"))
-			test_passed++;
-		
-		Sexpr se = Slambda(new SE_String("new func"), new SE_Empty(), SA(SN(3), SN(5)));
-		Jexpr test = desugar(se);
-		if(test.subst(null, null).interp().pp().equals("8"))
-			test_passed++;
-
-	}
-
-	public static void runTests() {
-
-		test_num(SN(42), 42);
-		test_num(SN(7), 7);
-		test_num(SA(SN(42),SN(0)), 42);
-		test_num(SM(SN(42),SN(0)), 0);
-		test_num(SA(SM(SN(42),SN(0)),SN(0)), 0);
-		test_num(SA(SM(SN(42),SN(0)),SA(SM(SN(42),SN(0)),SN(0))), 0);
-
-		test_num(SA(SN(42),SN(1)), 43);
-		test_num(SM(SN(42),SN(1)), 42);
-		test_num(SA(SM(SN(42),SN(1)),SN(1)), 43);
-		test_num(SA(SM(SN(42),SN(1)),SA(SM(SN(42),SN(1)),SN(1))), 85);
-
-		test_num(new SE_Cons(new SE_String("+"), new SE_Empty()), 0);
-		test_num(new SE_Cons(new SE_String("*"), new SE_Empty()), 1);
-		Sexpr three_things =
-				new SE_Cons(new SE_Num(1),
-						new SE_Cons(new SE_Num(2),
-								new SE_Cons(new SE_Num(4),
-										new SE_Empty())));
-		test_num(new SE_Cons(new SE_String("+"), three_things), 7);
-		test_num(new SE_Cons(new SE_String("*"), three_things), 8);
-
-		test_num(new SE_Cons(new SE_String("-"), new SE_Cons(new SE_Num(4), new SE_Empty())), -4);
-		test_num(new SE_Cons(new SE_String("-"), new SE_Cons(new SE_Num(4), new SE_Cons(new SE_Num(2), new SE_Empty()))), 2);
-
-		test(new SE_Cons(new SE_String("=="), new SE_Cons(new SE_Num(4), new SE_Cons(new SE_Num(2), new SE_Empty()))), new JBool(false));
-		test(new SE_Cons(new SE_String("=="), new SE_Cons(new SE_Num(4), new SE_Cons(new SE_Num(4), new SE_Empty()))), new JBool(true));
-
-		test(SApp("==", new SE_Num(4), new SE_Num(4)), new JBool(true));
-		test(SIf(SApp("==", new SE_Num(4), new SE_Num(4)), new SE_Num(5), new SE_Num(6)), JN(5));
-		test(SIf(SApp("==", new SE_Num(4), new SE_Num(2)), new SE_Num(5), new SE_Num(6)), JN(6));
-
-		System.out.println(test_passed + " tests passed.");
 	}
 
 	/********************

@@ -8,6 +8,12 @@ public interface Jexpr {
 	public Jexpr subst(JVar x, Jexpr v);
 }
 
+/********************
+ * 					*
+ * 		Values		*
+ * 					*
+ ********************/
+
 class lambda implements Jexpr {
 	public String Name;
 	public Jexpr vars;
@@ -167,6 +173,133 @@ class JBool implements Jexpr {
 	public Jexpr subst(JVar x, Jexpr v) {
 		return this;
 	}
+}
+
+class JUnit implements Jexpr {
+	public String pp() { 
+		return "";
+	}
+	public JUnit() {
+
+	}
+	public Boolean isValue() {
+		return true;
+	}
+	public Jexpr interp() {
+		return this;
+	}
+	public Jexpr step() {
+		return this;
+	}
+	public Jexpr subst(JVar x, Jexpr v) {
+		return this;
+	}
+}
+
+class JPair implements Jexpr {
+	public Jexpr lhs;
+	public Jexpr rhs;
+	public JPair(Jexpr l, Jexpr r) {
+		lhs = l;
+		rhs = r;
+	}
+	public Jexpr interp() {
+		return null;
+	}
+	public String pp() {
+		return "Pair " + lhs.pp() + " " + rhs.pp();
+	}
+	public Boolean isValue() {
+		return true;
+	}
+	public Jexpr step() {
+		return this;
+	}
+	public Jexpr subst(JVar x, Jexpr v) {
+		return this;
+	}
+}
+
+class Jinl implements Jexpr {
+	public Jexpr val;
+	public Jinl(Jexpr v) {
+		val = v;
+	}
+	public Jexpr interp() {
+		return null;
+	}
+	public String pp() {
+		return "inl " + val.pp();
+	}
+	public Boolean isValue() {
+		return true;
+	}
+	public Jexpr step() {
+		return this;
+	}
+	public Jexpr subst(JVar x, Jexpr v) {
+		return this;
+	}
+}
+
+class Jinr implements Jexpr {
+	public Jexpr val;
+	public Jinr(Jexpr v) {
+		val = v;
+	}
+	public Jexpr interp() {
+		return null;
+	}
+	public String pp() {
+		return "inr " + val.pp();
+	}
+	public Boolean isValue() {
+		return true;
+	}
+	public Jexpr step() {
+		return this;
+	}
+	public Jexpr subst(JVar x, Jexpr v) {
+		return this;
+	}
+}
+
+/************************
+ * 						*
+ * 		expressions		*
+ * 						*
+ ************************/
+
+class JCase implements Jexpr {
+	public Jexpr e;
+	public Jexpr l;
+	public Jexpr le;
+	public Jexpr r;
+	public Jexpr re;
+	
+	public JCase(Jexpr e, Jexpr l, Jexpr le, Jexpr r, Jexpr re) {
+		this.e = e;
+		this.l = l;
+		this.le = le;
+		this.r = r;
+		this.re = re;
+	}
+	public Jexpr interp() {
+		return null;
+	}
+	public String pp() {
+		return "case " + e.pp() + " as (" + l.pp() + ")->" + le.pp() + " or (" + r.pp() + ")->" + re.pp();
+	}
+	public Boolean isValue() {
+		return false;
+	}
+	public Jexpr step() {
+		return this;
+	}
+	public Jexpr subst(JVar x, Jexpr v) {
+		return this;
+	}
+	
 }
 
 class JIf implements Jexpr {
