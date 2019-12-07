@@ -302,6 +302,30 @@ class JCase implements Jexpr {
 	
 }
 
+class JObj implements Jexpr {
+	public String label;
+	public Jexpr e;
+	public JObj(String label, Jexpr e) {
+		this.label = label;
+		this.e = e;
+	}
+	public Jexpr interp() {
+		return null;
+	}
+	public String pp() {
+		return "Obj {" + e.pp() +"}";
+	}
+	public Boolean isValue() {
+		return e.isValue();
+	}
+	public Jexpr step() {
+		return this;
+	}
+	public Jexpr subst(JVar x, Jexpr v) {
+		return this;
+	}
+}
+
 class JIf implements Jexpr {
 	public Jexpr cond, texpr, fexpr;
 	public JIf(Jexpr cond, Jexpr tbr, Jexpr fbr) {
